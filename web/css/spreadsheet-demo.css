@@ -1,0 +1,9 @@
+body {
+	background-color: white;
+	color: black;
+}
+
+table.sheet { border-collapse: collapse; }
+table.sheet th, table.sheet td { border: solid thin #ddd; padding: 0mm 2mm; }
+td.float { text-align: right; }
+td.invalid { color: #700; font-variant: small-caps; font-weight: bold; }
