@@ -78,7 +78,7 @@ let render_sheet csheet =
       Html5.F.td
 	~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
 	    Html5.R.a_class (React.S.l1 snd %value)]
-	[Rform5.string_input ~onchange:%set_expr
+	[Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:%set_expr
 			     (React.S.l3 pick edit_pos value %expr)]
     }} in
 
@@ -94,7 +94,7 @@ let render_sheet csheet =
       (List.sample mkrow n)
   ])
 
-let sheet = Spreadsheet.create 24 16
+let sheet = Spreadsheet.create 24 10
 let () =
   let open Formula in
   let open Spreadsheet in

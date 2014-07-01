@@ -17,18 +17,22 @@
 open Eliom_content
 
 val custom_input :
+    ?a: Html5_types.input_attrib Html5.attrib list ->
     of_string: (string -> 'a) -> to_string: ('a -> string) ->
     ?onchange: ('a -> unit Lwt.t) ->
     'a React.S.t -> [> Html5_types.input] Html5.elt
 
 val string_input :
+      ?a: Html5_types.input_attrib Html5.attrib list ->
       ?onchange: (string -> unit Lwt.t) ->
       string React.S.t -> [> Html5_types.input] Html5.elt
 val int_input :
+      ?a: Html5_types.input_attrib Html5.attrib list ->
       ?to_string: (int -> string) ->
       ?onchange: (int -> unit Lwt.t) ->
       int React.S.t -> [> Html5_types.input] Html5.elt
 val float_input :
+      ?a: Html5_types.input_attrib Html5.attrib list ->
       ?to_string: (float -> string) ->
       ?onchange: (float -> unit Lwt.t) ->
       float React.S.t -> [> Html5_types.input] Html5.elt
