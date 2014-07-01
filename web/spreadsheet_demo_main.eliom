@@ -29,38 +29,37 @@
   let edit_pos, set_edit_pos = React.S.create (0, 0)
 }}
 
-open Spreadsheet
-
 let value_class = function
-  | Invalid -> ["invalid"]
-  | Text _ -> ["text"]
-  | Float _ -> ["float"]
+  | Formula.Invalid -> ["invalid"]
+  | Formula.Text _ -> ["text"]
+  | Formula.Float _ -> ["float"]
 
 let render_sheet sheet =
-  let open Html5.D in
+  let n, m = Spreadsheet.dim sheet in
 
-  let n, m = dim sheet in
-
-  let mkcell i j =
-    let value_info v = (string_of_value v, value_class v) in
+  let mkcell j k =
+    let value_info v = (Formula.string_of_value v, value_class v) in
     let s = Eliom_react.S.Down.of_react ~scope:`Site
-	      (React.S.l1 value_info sheet.(i).(j).cell_value) in
-    td ~a:[a_onclick {{fun _ -> set_edit_pos (%i, %j)}};
-	   Html5.C.attr {{Html5.R.a_class (React.S.l1 snd %s)}}]
+	      (React.S.l1 value_info sheet.(j).(k).Spreadsheet.cell_value) in
+    Html5.F.td
+      ~a:[Html5.F.a_onclick {{fun _ -> set_edit_pos (%j, %k)}};
+	  Html5.C.attr {{Html5.R.a_class (React.S.l1 snd %s)}}]
        [Html5.C.node {{Html5.R.pcdata (React.S.l1 fst %s)}}] in
 
-  let mkrow i =
-    tr (th [pcdata (string_of_int i)] :: List.sample (mkcell i) m) in
+  let mkrow j =
+    Html5.F.(tr (th [pcdata (string_of_int j)] :: List.sample (mkcell j) m)) in
 
-  let mkhdr j = th [pcdata (String.make 1 (letter_of_int j))] in
+  let mkhdr k =
+    Html5.F.(th [pcdata (String.make 1 (Formula.letter_of_int k))]) in
 
-  let get_editable = server_function Json.t<int * int> @@ fun (i, j) ->
-    let cell = sheet.(i).(j) in
+  let get_editable = server_function Json.t<int * int> @@ fun (j, k) ->
+    let cell = sheet.(j).(k) in
     let expr =
       Eliom_react.S.Down.of_react ~scope:`Site
-	(React.S.l1 string_of_expr cell.cell_expr) in
+	(React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
     let set_expr s =
-      Lwt.return (cell.cell_set_expr (Formula_lexer.parse_string s)) in
+      let e = Formula_lexer.parse_string s in
+      Lwt.return (cell.Spreadsheet.cell_set_expr e) in
     Lwt.return (expr, server_function Json.t<string> set_expr) in
 
   let editor = {{
@@ -75,24 +74,25 @@ let render_sheet sheet =
     let set_expr s =
       try_lwt snd (React.S.value editable) s
       with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
-    Html5.D.span [
+    Html5.F.span [
       Rform5.custom_input ~to_string:string_of_pos ~of_string:pos_of_string
 			  ~onchange:(Lwt.wrap1 set_edit_pos) edit_pos;
       Rform5.string_input ~onchange:set_expr
 			  (React.S.switch (React.S.l1 fst editable));
-      Html5.D.(span ~a:[a_class ["error"]]) [Html5.R.pcdata error];
+      Html5.F.(span ~a:[a_class ["error"]]) [Html5.R.pcdata error];
     ]
   }} in
 
-  div [
+  Html5.F.(div [
     Html5.C.node editor;
     table ~a:[a_class ["sheet"]]
       (tr (td [] :: List.sample mkhdr m))
       (List.sample mkrow n)
-  ]
+  ])
 
 let sheet = Spreadsheet.create 12 8
 let () =
+  let open Formula in
   let open Spreadsheet in
   set sheet 0 0 (Const (Text "x ="));
   set sheet 1 0 (Const (Text "y ="));
