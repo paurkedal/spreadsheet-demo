@@ -24,23 +24,53 @@
   let (>>=) = Lwt.(>>=)
   let (>|=) = Lwt.(>|=)
 }}
-{client{
-  open Formula
-  let edit_pos, set_edit_pos = React.S.create (0, 0)
-}}
 
 let value_class = function
   | Formula.Invalid -> ["invalid"]
   | Formula.Text _ -> ["text"]
   | Formula.Float _ -> ["float"]
 
-let render_sheet sheet =
-  let n, m = Spreadsheet.dim sheet in
+(** Client view of a spreadsheet, containing signals and server functions. *)
+module Csheet = struct
+
+  type cell = {
+    expr : string Eliom_react.S.Down.t;
+    set_expr : (string, unit) server_function;
+    value : (string * string list) Eliom_react.S.Down.t;
+  }
+
+  let dim csheet =
+    let n = Array.length csheet in
+    if n = 0 then (0, 0) else (n, Array.length csheet.(0))
+
+  let of_sheet sheet =
+    let n, m = Spreadsheet.dim sheet in
+    Array.init n @@ fun j ->
+      Array.init m @@ fun k ->
+	let cell = sheet.(j).(k) in
+	let expr =
+	  Eliom_react.S.Down.of_react ~scope:`Site
+	    (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
+	let set_expr = server_function Json.t<string> @@ fun s ->
+	  let e = Formula_lexer.parse_string s in
+	  Lwt.return (cell.Spreadsheet.cell_set_expr e) in
+	let value_info v = (Formula.string_of_value v, value_class v) in
+	let value =
+	  Eliom_react.S.Down.of_react ~scope:`Site
+	    (React.S.l1 value_info cell.Spreadsheet.cell_value) in
+	{expr; set_expr; value}
+end
+
+{client{
+  let edit_pos, set_edit_pos = React.S.create (0, 0)
+}}
+
+(** HTML and JS for viewing and editing [csheet]. *)
+let render_sheet csheet =
+  let n, m = Csheet.dim csheet in
 
   let mkcell j k =
-    let value_info v = (Formula.string_of_value v, value_class v) in
-    let s = Eliom_react.S.Down.of_react ~scope:`Site
-	      (React.S.l1 value_info sheet.(j).(k).Spreadsheet.cell_value) in
+    let s = csheet.(j).(k).Csheet.value in
     Html5.F.td
       ~a:[Html5.F.a_onclick {{fun _ -> set_edit_pos (%j, %k)}};
 	  Html5.C.attr {{Html5.R.a_class (React.S.l1 snd %s)}}]
@@ -53,14 +83,8 @@ let render_sheet sheet =
     Html5.F.(th [pcdata (String.make 1 (Formula.letter_of_int k))]) in
 
   let get_editable = server_function Json.t<int * int> @@ fun (j, k) ->
-    let cell = sheet.(j).(k) in
-    let expr =
-      Eliom_react.S.Down.of_react ~scope:`Site
-	(React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
-    let set_expr s =
-      let e = Formula_lexer.parse_string s in
-      Lwt.return (cell.Spreadsheet.cell_set_expr e) in
-    Lwt.return (expr, server_function Json.t<string> set_expr) in
+    let cell = csheet.(j).(k) in
+    Lwt.return (cell.Csheet.expr, cell.Csheet.set_expr) in
 
   let editor = {{
     let error, set_error = React.S.create "" in
@@ -75,7 +99,8 @@ let render_sheet sheet =
       try_lwt snd (React.S.value editable) s
       with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
     Html5.F.span [
-      Rform5.custom_input ~to_string:string_of_pos ~of_string:pos_of_string
+      Rform5.custom_input ~to_string:Formula.string_of_pos
+			  ~of_string:Formula.pos_of_string
 			  ~onchange:(Lwt.wrap1 set_edit_pos) edit_pos;
       Rform5.string_input ~onchange:set_expr
 			  (React.S.switch (React.S.l1 fst editable));
@@ -90,7 +115,7 @@ let render_sheet sheet =
       (List.sample mkrow n)
   ])
 
-let sheet = Spreadsheet.create 12 8
+let sheet = Spreadsheet.create 24 16
 let () =
   let open Formula in
   let open Spreadsheet in
@@ -101,6 +126,8 @@ let () =
   set sheet 1 1 (Const (Float 11.0));
   set sheet 2 1 (Call ("sum", (Range ((0, 1), (1, 1)))))
 
+let csheet = Csheet.of_sheet sheet
+
 let main_handler () () =
   let open Html5.D in
   Lwt.return @@
@@ -109,7 +136,7 @@ let main_handler () () =
       ~css:[["css"; "spreadsheet-demo.css"]]
       (body [
 	h1 [pcdata "Spreadsheet Demo"];
-	render_sheet sheet;
+	render_sheet csheet;
       ])
 
 module Main_app =
