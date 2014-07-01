@@ -70,11 +70,17 @@ let render_sheet csheet =
   let n, m = Csheet.dim csheet in
 
   let mkcell j k =
-    let s = csheet.(j).(k).Csheet.value in
-    Html5.F.td
-      ~a:[Html5.F.a_onclick {{fun _ -> set_edit_pos (%j, %k)}};
-	  Html5.C.attr {{Html5.R.a_class (React.S.l1 snd %s)}}]
-       [Html5.C.node {{Html5.R.pcdata (React.S.l1 fst %s)}}] in
+    let open Csheet in
+    let {expr; set_expr; value} = csheet.(j).(k) in
+    Html5.C.node {{
+      let value = React.S.l1 fst %value in
+      let pick pos v e = if pos = (%j, %k) then e else v in
+      Html5.F.td
+	~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
+	    Html5.R.a_class (React.S.l1 snd %value)]
+	[Rform5.string_input ~onchange:%set_expr
+			     (React.S.l3 pick edit_pos value %expr)]
+    }} in
 
   let mkrow j =
     Html5.F.(tr (th [pcdata (string_of_int j)] :: List.sample (mkcell j) m)) in
@@ -82,34 +88,7 @@ let render_sheet csheet =
   let mkhdr k =
     Html5.F.(th [pcdata (String.make 1 (Formula.letter_of_int k))]) in
 
-  let get_editable = server_function Json.t<int * int> @@ fun (j, k) ->
-    let cell = csheet.(j).(k) in
-    Lwt.return (cell.Csheet.expr, cell.Csheet.set_expr) in
-
-  let editor = {{
-    let error, set_error = React.S.create "" in
-    let editable, set_editable =
-      React.S.create (React.S.const "", (fun _ -> Lwt.return_unit)) in
-    let set_editable cell = set_error ""; set_editable cell in
-    Lwt.async begin fun () ->
-      Lwt_react.S.run_s (React.S.l1 %get_editable edit_pos) >|=
-      React.S.trace set_editable *> Lwt_react.S.keep
-    end;
-    let set_expr s =
-      try_lwt snd (React.S.value editable) s
-      with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
-    Html5.F.span [
-      Rform5.custom_input ~to_string:Formula.string_of_pos
-			  ~of_string:Formula.pos_of_string
-			  ~onchange:(Lwt.wrap1 set_edit_pos) edit_pos;
-      Rform5.string_input ~onchange:set_expr
-			  (React.S.switch (React.S.l1 fst editable));
-      Html5.F.(span ~a:[a_class ["error"]]) [Html5.R.pcdata error];
-    ]
-  }} in
-
   Html5.F.(div [
-    Html5.C.node editor;
     table ~a:[a_class ["sheet"]]
       (tr (td [] :: List.sample mkhdr m))
       (List.sample mkrow n)
