@@ -5,8 +5,12 @@ body {
 
 table.sheet { border-collapse: collapse; }
 table.sheet th, table.sheet td { border: solid thin #ddd; padding: 0; }
+table.sheet th { background-color: #eee; color: #000; }
+table.sheet th:first-child { text-align: right; padding: 0 1mm; }
+table.sheet td:first-child { border: none; }
 td.float input { text-align: right; }
-td.invalid input { color: #700; font-variant: small-caps; font-weight: bold; }
+td.invalid input { color: #700; font-weight: bold; }
+td.invalid input:focus { color: inherit; font-weight: inherit; }
 
 table.sheet input { border: solid thin #fff; margin: 0; }
 table.sheet input:focus { border: solid thin #ddd; }

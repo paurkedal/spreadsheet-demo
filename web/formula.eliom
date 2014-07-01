@@ -38,7 +38,7 @@
     | Float of float
 
   let string_of_value ?(quote = false) = function
-    | Invalid -> "invalid"
+    | Invalid -> "<error>"
     | Text s -> if quote then "\"" ^ String.escaped s ^ "\"" else s
     | Float x -> sprintf "%g" x
 }}
