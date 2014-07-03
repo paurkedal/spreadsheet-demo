@@ -36,3 +36,8 @@ val float_input :
       ?to_string: (float -> string) ->
       ?onchange: (float -> unit Lwt.t) ->
       float React.S.t -> [> Html5_types.input] Html5.elt
+
+val checkbox :
+      ?a: Html5_types.input_attrib Html5.attrib list ->
+      onchange: (bool -> unit) ->
+      unit -> [> Html5_types.input] Html5.elt

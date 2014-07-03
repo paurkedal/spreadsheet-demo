@@ -36,3 +36,12 @@ let int_input ?a ?(to_string = string_of_int) =
   custom_input ?a ~of_string:int_of_string ~to_string
 let float_input ?a ?(to_string = string_of_float) =
   custom_input ?a ~of_string:float_of_string ~to_string
+
+let checkbox ?(a = []) ~(onchange : (bool -> unit)) () =
+  let onchange' ev =
+    let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
+			:> Dom_html.inputElement Js.t) in
+    onchange (Js.to_bool elt##checked) in
+  let onchange'' = Eliom_content.Xml.(Caml (CE_client_closure onchange')) in
+  Html5.R.Raw.input ~a:(Html5.F.a_input_type `Checkbox ::
+			Html5.R.Raw.a_onchange onchange'' :: a) ()

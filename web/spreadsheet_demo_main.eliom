@@ -63,6 +63,7 @@ end
 
 {client{
   let edit_pos, set_edit_pos = React.S.create (0, 0)
+  let show_formulas, set_show_formulas = React.S.create false
 }}
 
 (** HTML and JS for viewing and editing [csheet]. *)
@@ -74,12 +75,12 @@ let render_sheet csheet =
     let {expr; set_expr; value} = csheet.(j).(k) in
     Html5.C.node {{
       let value = React.S.l1 fst %value in
-      let pick pos v e = if pos = (%j, %k) then e else v in
+      let pick showf pos v e = if showf || pos = (%j, %k) then e else v in
       Html5.F.td
 	~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
 	    Html5.R.a_class (React.S.l1 snd %value)]
 	[Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:%set_expr
-			     (React.S.l3 pick edit_pos value %expr)]
+			  (React.S.l4 pick show_formulas edit_pos value %expr)]
     }} in
 
   let mkrow j =
@@ -89,6 +90,12 @@ let render_sheet csheet =
     Html5.F.(th [pcdata (String.make 1 (Formula.letter_of_int k))]) in
 
   Html5.F.(div [
+    div [
+      span ~a:[a_class ["global"]] [
+	Html5.C.node {{Rform5.checkbox ~onchange:set_show_formulas ()}};
+	pcdata "Show formulas.";
+      ];
+    ];
     table ~a:[a_class ["sheet"]]
       (tr (td [] :: List.sample mkhdr m))
       (List.sample mkrow n)
