@@ -64,6 +64,8 @@ end
 {client{
   let edit_pos, set_edit_pos = React.S.create (0, 0)
   let show_formulas, set_show_formulas = React.S.create false
+  let error, set_error = React.S.create ""
+  let set_edit_pos pos = set_error ""; set_edit_pos pos
 }}
 
 (** HTML and JS for viewing and editing [csheet]. *)
@@ -74,12 +76,15 @@ let render_sheet csheet =
     let open Csheet in
     let {expr; set_expr; value} = csheet.(j).(k) in
     Html5.C.node {{
+      let set_expr s =
+	try_lwt %set_expr s
+	with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
       let value = React.S.l1 fst %value in
       let pick showf pos v e = if showf || pos = (%j, %k) then e else v in
       Html5.F.td
 	~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
 	    Html5.R.a_class (React.S.l1 snd %value)]
-	[Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:%set_expr
+	[Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:set_expr
 			  (React.S.l4 pick show_formulas edit_pos value %expr)]
     }} in
 
@@ -95,6 +100,7 @@ let render_sheet csheet =
 	Html5.C.node {{Rform5.checkbox ~onchange:set_show_formulas ()}};
 	pcdata "Show formulas.";
       ];
+      span ~a:[a_class ["error"]] [Html5.C.node {{Html5.R.pcdata error}}];
     ];
     table ~a:[a_class ["sheet"]]
       (tr (td [] :: List.sample mkhdr m))

@@ -14,3 +14,5 @@ td.invalid input:focus { color: inherit; font-weight: inherit; }
 
 table.sheet input { border: solid thin #fff; margin: 0; }
 table.sheet input:focus { border: solid thin #ddd; }
+
+span.error { margin-left: 5mm; color: #700; font-weight: bold; }
