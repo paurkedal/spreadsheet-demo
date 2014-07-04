@@ -44,6 +44,7 @@ rule lex = parse
   | float as s { CONST (Float (float_of_string s)) }
   | ('+' | '-') as c { A2 (check_func (String.make 1 c)) }
   | ('*' | '/') as c { A4 (check_func (String.make 1 c)) }
+  | '^' { A6 (check_func "^") }
   | '"' { lex_string (Buffer.create 32) lexbuf }
   | eof { EOF }
 

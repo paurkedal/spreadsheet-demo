@@ -55,6 +55,7 @@ and expr =
 let operator_precedence = function
   | "+" | "-" -> 2
   | "*" | "/" -> 4
+  | "^" -> 6
   | _ -> 10
 
 let rec bprint_expr ?(prec = 0) buf = function
@@ -102,22 +103,47 @@ let mFF f v0 v1 =
   | Float x0, Float x1 -> Float (f x0 x1)
   | _, _ -> Invalid
 
+let bF f = function
+  | [s0] -> React.S.l1 (mF f) s0
+  | _ -> React.S.const Invalid
+
 let bFF f = function
   | [s0; s1] -> React.S.l2 (mFF f) s0 s1
   | _ -> React.S.const Invalid
 
-let b_sum = React.S.merge (mFF (+.)) (Float 0.0)
-let b_prod = React.S.merge (mFF ( *. )) (Float 1.0)
 let b_minus = function
   | [s0] -> React.S.l1 (mF (~-.)) s0
   | [s0; s1] -> React.S.l2 (mFF (-.)) s0 s1
   | _ -> React.S.const Invalid
-let b_div = bFF (/.)
+
+let defF k f = def k (bF f)
+let defFF k f = def k (bFF f)
+let defFFl k f c = def k (React.S.merge (mFF f) (Float c))
 
 let () =
-  def "sum" b_sum;
-  def "prod" b_prod;
-  def "+" b_sum;
+  defFFl "sum" (+.) 0.0;
+  defFFl "prod" ( *. ) 1.0;
+  defFF "+" (+.);
   def "-" b_minus;
-  def "*" b_prod;
-  def "/" b_div
+  defFF "*" ( *. );
+  defFF "/" (/.);
+  defFF "^" ( ** );
+  defFF "mod" mod_float;
+  defF "sqrt" sqrt;
+  defF "exp" exp;
+  defF "log" log;
+  defF "log10" log10;
+  defF "cos" cos;
+  defF "sin" sin;
+  defF "tan" tan;
+  defF "acos" acos;
+  defF "asin" asin;
+  defF "atan" atan;
+  defF "cosh" cosh;
+  defF "sinh" sinh;
+  defF "tanh" tanh;
+  defF "ceil" ceil;
+  defF "floor" floor;
+  defF "abs" abs_float;
+  defFFl "max" max neg_infinity;
+  defFFl "min" min infinity

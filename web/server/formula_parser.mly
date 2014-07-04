@@ -21,9 +21,10 @@
 %token COMMA COLON LPAREN RPAREN EOF
 %token<int * int> POS
 %token<Formula.value> CONST
-%token<string> FUNC A2 A4
+%token<string> FUNC A2 A4 A6
 %left A2
 %left A4
+%left A6
 
 %type<Formula.expr> start
 %start start
@@ -41,6 +42,7 @@ expr:
   | A2 expr { Call ($1, $2) }
   | expr A2 expr { Call ($2, Concat [$1; $3]) }
   | expr A4 expr { Call ($2, Concat [$1; $3]) }
+  | expr A6 expr { Call ($2, Concat [$1; $3]) }
   | LPAREN expr RPAREN { $2 }
   ;
 
