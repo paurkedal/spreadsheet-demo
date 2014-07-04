@@ -28,7 +28,11 @@
 %type<Formula.expr> start
 %start start
 %%
-start: expr EOF { $1 };
+start:
+    expr EOF { $1 }
+  | EOF { Empty }
+  ;
+
 expr:
     CONST { Const $1 }
   | POS COLON POS { Range ($1, $3) }

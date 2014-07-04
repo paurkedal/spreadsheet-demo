@@ -77,7 +77,7 @@ let render_sheet csheet =
     let {expr; set_expr; value} = csheet.(j).(k) in
     Html5.C.node {{
       let set_expr s =
-	try_lwt %set_expr s
+	try_lwt %set_expr s >|= fun () -> set_error "";
 	with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
       let value = React.S.l1 fst %value in
       let pick showf pos v e = if showf || pos = (%j, %k) then e else v in
