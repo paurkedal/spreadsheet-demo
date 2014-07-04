@@ -111,12 +111,19 @@ let sheet = Spreadsheet.create 24 10
 let () =
   let open Formula in
   let open Spreadsheet in
-  set sheet 0 0 (Const (Text "x ="));
-  set sheet 1 0 (Const (Text "y ="));
-  set sheet 2 0 (Const (Text "x + y ="));
-  set sheet 0 1 (Const (Float 10.0));
-  set sheet 1 1 (Const (Float 11.0));
-  set sheet 2 1 (Call ("sum", (Range ((0, 1), (1, 1)))))
+  set sheet 0 0 (Const (Text "Values:"));
+  set sheet 0 1 (Const (Float 1.33));
+  set sheet 1 1 (Const (Float (-1.5)));
+  set sheet 2 1 (Const (Float 100.0));
+  set sheet 3 1 (Const (Float 0.25));
+  let range = Range ((0, 1), (3, 1)) in
+  let comp j fn =
+    set sheet j 0 (Const (Text (String.capitalize fn ^ ":")));
+    set sheet j 1 (Call (fn, range)) in
+  comp 4 "sum";
+  comp 5 "prod";
+  comp 6 "min";
+  comp 7 "max"
 
 let csheet = Csheet.of_sheet sheet
 
