@@ -36,7 +36,9 @@ let rec eval_expr sheet = function
   | Range ((iL, jL), (iU, jU)) ->
     let rec collect_row i j acc =
       if j < jL then acc else
-      collect_row i (j - 1) (sheet.(i).(j).cell_value :: acc) in
+      let v = sheet.(i).(j).cell_value in
+      let v' = if React.S.value v = HiZ then React.S.const Invalid else v in
+      collect_row i (j - 1) (v' :: acc) in
     let rec collect i acc =
       if i < iL then acc else
       collect (i - 1) (collect_row i jU acc) in
@@ -62,4 +64,6 @@ let create n m =
   done;
   sheet
 
-let set sheet i j v = sheet.(i).(j).cell_set_expr v
+let set sheet i j e =
+  sheet.(i).(j).cell_set_expr (Const HiZ);
+  sheet.(i).(j).cell_set_expr e

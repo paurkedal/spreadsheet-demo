@@ -26,8 +26,9 @@
 }}
 
 let value_class = function
+  | Formula.HiZ     -> ["invalid"]
   | Formula.Invalid -> ["invalid"]
-  | Formula.Text _ -> ["text"]
+  | Formula.Text _  -> ["text"]
   | Formula.Float _ -> ["float"]
 
 (** Client view of a spreadsheet, containing signals and server functions. *)
@@ -53,7 +54,7 @@ module Csheet = struct
 	    (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
 	let set_expr = server_function Json.t<string> @@ fun s ->
 	  let e = Formula_lexer.parse_string s in
-	  Lwt.return (cell.Spreadsheet.cell_set_expr e) in
+	  Lwt.return (Spreadsheet.set sheet j k e) in
 	let value_info v = (Formula.string_of_value v, value_class v) in
 	let value =
 	  Eliom_react.S.Down.of_react ~scope:`Site

@@ -33,11 +33,13 @@
   type range = pos * pos
 
   type value =
+    | HiZ
     | Invalid
     | Text of string
     | Float of float
 
   let string_of_value ?(quote = false) = function
+    | HiZ -> "<floating>"
     | Invalid -> "<error>"
     | Text s -> if quote then "\"" ^ String.escaped s ^ "\"" else s
     | Float x -> sprintf "%g" x
@@ -95,11 +97,13 @@ let builtins = Hashtbl.create 23
 let def k f = Hashtbl.add builtins k f
 
 let mF f = function
+  | HiZ -> HiZ
   | Float x0 -> Float (f x0)
   | _ -> Invalid
 
 let mFF f v0 v1 =
   match v0, v1 with
+  | HiZ, _ | _, HiZ -> HiZ
   | Float x0, Float x1 -> Float (f x0 x1)
   | _, _ -> Invalid
 
