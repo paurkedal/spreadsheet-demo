@@ -45,9 +45,7 @@
     | Float x -> sprintf "%g" x
 }}
 
-type func = value React.S.t list -> value React.S.t
-
-and expr =
+type expr =
   | Empty
   | Const of value
   | Range of range
