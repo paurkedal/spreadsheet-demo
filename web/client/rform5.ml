@@ -14,21 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 
-open Eliom_content
+open Eliom_content.Html5
 
 let custom_input ?(a = []) ~of_string ~to_string
                  ?(onchange : ('a -> unit Lwt.t) option) v =
   let myattr =
     match onchange with
-    | None -> Html5.D.a_readonly `ReadOnly
+    | None -> D.a_readonly `ReadOnly
     | Some f ->
       let g ev =
         let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
                           :> Dom_html.inputElement Js.t) in
         Lwt.async @@ fun () -> f (of_string (Js.to_string elt##value)) in
-      Html5.R.Raw.a_onchange Eliom_content.Xml.(Caml (CE_client_closure g)) in
-  Html5.R.Raw.input ~a:(Html5.R.Raw.a_value (React.S.map to_string v) ::
-                        myattr :: a) ()
+      D.a_onchange g in
+  D.input ~a:(R.a_value (React.S.map to_string v) :: myattr :: a) ()
 
 let string_input ?a =
   custom_input ?a ~of_string:(fun x -> x) ~to_string:(fun x -> x)
@@ -42,6 +41,4 @@ let checkbox ?(a = []) ~(onchange : (bool -> unit)) () =
     let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
                         :> Dom_html.inputElement Js.t) in
     onchange (Js.to_bool elt##checked) in
-  let onchange'' = Eliom_content.Xml.(Caml (CE_client_closure onchange')) in
-  Html5.R.Raw.input ~a:(Html5.F.a_input_type `Checkbox ::
-                        Html5.R.Raw.a_onchange onchange'' :: a) ()
+  D.input ~a:(D.a_input_type `Checkbox :: D.a_onchange onchange' :: a) ()

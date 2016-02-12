@@ -104,8 +104,7 @@ let render_sheet csheet =
       span ~a:[a_class ["error"]] [Html5.C.node {{Html5.R.pcdata error}}];
     ];
     table ~a:[a_class ["sheet"]]
-      (tr (td [] :: List.sample mkhdr m))
-      (List.sample mkrow n)
+      (tr (td [] :: List.sample mkhdr m) :: List.sample mkrow n)
   ])
 
 let sheet = Spreadsheet.create 24 10
