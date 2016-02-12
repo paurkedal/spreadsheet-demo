@@ -107,6 +107,8 @@ let render_sheet csheet =
       (tr (td [] :: List.sample mkhdr m) :: List.sample mkrow n)
   ])
 
+let () = Ocsigen_config.set_maxrequestbodysizeinmemory 65536
+
 let sheet = Spreadsheet.create 24 10
 let () =
   let open Formula in
