@@ -55,10 +55,10 @@ let create n m =
   for i = 0 to n - 1 do
     for j = 0 to m - 1 do
       let aux e =
-	match eval_expr sheet e with
-	| [s] -> s
-	| [] -> React.S.const (Text "")
-	| _ -> React.S.const Invalid in
+        match eval_expr sheet e with
+        | [s] -> s
+        | [] -> React.S.const (Text "")
+        | _ -> React.S.const Invalid in
       sheet.(i).(j).cell_value <- React.S.bind sheet.(i).(j).cell_expr aux
     done
   done;

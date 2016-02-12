@@ -48,18 +48,18 @@ module Csheet = struct
     let n, m = Spreadsheet.dim sheet in
     Array.init n @@ fun j ->
       Array.init m @@ fun k ->
-	let cell = sheet.(j).(k) in
-	let expr =
-	  Eliom_react.S.Down.of_react ~scope:`Site
-	    (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
-	let set_expr = server_function Json.t<string> @@ fun s ->
-	  let e = Formula_lexer.parse_string s in
-	  Lwt.return (Spreadsheet.set sheet j k e) in
-	let value_info v = (Formula.string_of_value v, value_class v) in
-	let value =
-	  Eliom_react.S.Down.of_react ~scope:`Site
-	    (React.S.l1 value_info cell.Spreadsheet.cell_value) in
-	{expr; set_expr; value}
+        let cell = sheet.(j).(k) in
+        let expr =
+          Eliom_react.S.Down.of_react ~scope:`Site
+            (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
+        let set_expr = server_function Json.t<string> @@ fun s ->
+          let e = Formula_lexer.parse_string s in
+          Lwt.return (Spreadsheet.set sheet j k e) in
+        let value_info v = (Formula.string_of_value v, value_class v) in
+        let value =
+          Eliom_react.S.Down.of_react ~scope:`Site
+            (React.S.l1 value_info cell.Spreadsheet.cell_value) in
+        {expr; set_expr; value}
 end
 
 {client{
@@ -78,15 +78,15 @@ let render_sheet csheet =
     let {expr; set_expr; value} = csheet.(j).(k) in
     Html5.C.node {{
       let set_expr s =
-	try_lwt %set_expr s >|= fun () -> set_error "";
-	with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
+        try_lwt %set_expr s >|= fun () -> set_error "";
+        with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
       let value = React.S.l1 fst %value in
       let pick showf pos v e = if showf || pos = (%j, %k) then e else v in
       Html5.F.td
-	~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
-	    Html5.R.a_class (React.S.l1 snd %value)]
-	[Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:set_expr
-			  (React.S.l4 pick show_formulas edit_pos value %expr)]
+        ~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
+            Html5.R.a_class (React.S.l1 snd %value)]
+        [Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:set_expr
+                          (React.S.l4 pick show_formulas edit_pos value %expr)]
     }} in
 
   let mkrow j =
@@ -98,8 +98,8 @@ let render_sheet csheet =
   Html5.F.(div [
     div [
       span ~a:[a_class ["global"]] [
-	Html5.C.node {{Rform5.checkbox ~onchange:set_show_formulas ()}};
-	pcdata "Show formulas.";
+        Html5.C.node {{Rform5.checkbox ~onchange:set_show_formulas ()}};
+        pcdata "Show formulas.";
       ];
       span ~a:[a_class ["error"]] [Html5.C.node {{Html5.R.pcdata error}}];
     ];
@@ -135,12 +135,12 @@ let main_handler () () =
       ~title:"Spreadsheet Demo"
       ~css:[["css"; "spreadsheet-demo.css"]]
       (body [
-	h1 [pcdata "Spreadsheet Demo"];
-	render_sheet csheet;
+        h1 [pcdata "Spreadsheet Demo"];
+        render_sheet csheet;
       ])
 
 module Main_app =
   Eliom_registration.App (struct let application_name = "main" end)
 let main_service =
   Main_app.register_service ~path:[] ~get_params:Eliom_parameter.unit
-			    main_handler
+                            main_handler
