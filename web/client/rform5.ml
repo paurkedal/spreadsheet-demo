@@ -25,7 +25,7 @@ let custom_input ?(a = []) ~of_string ~to_string
       let g ev =
         let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
                           :> Dom_html.inputElement Js.t) in
-        Lwt.async @@ fun () -> f (of_string (Js.to_string elt##value)) in
+        Lwt.async @@ fun () -> f (of_string (Js.to_string elt##.value)) in
       D.a_onchange g in
   D.input ~a:(R.a_value (React.S.map to_string v) :: myattr :: a) ()
 
@@ -40,5 +40,5 @@ let checkbox ?(a = []) ~(onchange : (bool -> unit)) () =
   let onchange' ev =
     let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
                         :> Dom_html.inputElement Js.t) in
-    onchange (Js.to_bool elt##checked) in
+    onchange (Js.to_bool elt##.checked) in
   D.input ~a:(D.a_input_type `Checkbox :: D.a_onchange onchange' :: a) ()

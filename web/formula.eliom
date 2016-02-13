@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 
-{shared{
+[%%shared
   open Unprime_string
   open Printf
 
@@ -43,7 +43,7 @@
     | Invalid -> "<error>"
     | Text s -> if quote then "\"" ^ String.escaped s ^ "\"" else s
     | Float x -> sprintf "%g" x
-}}
+]
 
 type expr =
   | Empty

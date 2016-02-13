@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 
-{shared{
+[%%shared
   open Eliom_content
   open Eliom_pervasives
   open Unprime
@@ -23,7 +23,7 @@
 
   let (>>=) = Lwt.(>>=)
   let (>|=) = Lwt.(>|=)
-}}
+]
 
 let value_class = function
   | Formula.HiZ     -> ["invalid"]
@@ -52,7 +52,7 @@ module Csheet = struct
         let expr =
           Eliom_react.S.Down.of_react ~scope:`Site
             (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
-        let set_expr = server_function Json.t<string> @@ fun s ->
+        let set_expr = server_function [%derive.json: string] @@ fun s ->
           let e = Formula_lexer.parse_string s in
           Lwt.return (Spreadsheet.set sheet j k e) in
         let value_info v = (Formula.string_of_value v, value_class v) in
@@ -62,12 +62,12 @@ module Csheet = struct
         {expr; set_expr; value}
 end
 
-{client{
+[%%client
   let edit_pos, set_edit_pos = React.S.create (0, 0)
   let show_formulas, set_show_formulas = React.S.create false
   let error, set_error = React.S.create ""
   let set_edit_pos pos = set_error ""; set_edit_pos pos
-}}
+]
 
 (** HTML and JS for viewing and editing [csheet]. *)
 let render_sheet csheet =
@@ -76,18 +76,18 @@ let render_sheet csheet =
   let mkcell j k =
     let open Csheet in
     let {expr; set_expr; value} = csheet.(j).(k) in
-    Html5.C.node {{
+    Html5.C.node [%client
       let set_expr s =
-        try_lwt %set_expr s >|= fun () -> set_error "";
+        try%lwt ~%set_expr s >|= fun () -> set_error "";
         with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
-      let value = React.S.l1 fst %value in
-      let pick showf pos v e = if showf || pos = (%j, %k) then e else v in
+      let value = React.S.l1 fst ~%value in
+      let pick showf pos v e = if showf || pos = (~%j, ~%k) then e else v in
       Html5.F.td
-        ~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (%j, %k));
-            Html5.R.a_class (React.S.l1 snd %value)]
+        ~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (~%j, ~%k));
+            Html5.R.a_class (React.S.l1 snd ~%value)]
         [Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:set_expr
-                          (React.S.l4 pick show_formulas edit_pos value %expr)]
-    }} in
+                          (React.S.l4 pick show_formulas edit_pos value ~%expr)]
+    ] in
 
   let mkrow j =
     Html5.F.(tr (th [pcdata (string_of_int j)] :: List.sample (mkcell j) m)) in
@@ -98,10 +98,10 @@ let render_sheet csheet =
   Html5.F.(div [
     div [
       span ~a:[a_class ["global"]] [
-        Html5.C.node {{Rform5.checkbox ~onchange:set_show_formulas ()}};
+        Html5.C.node [%client Rform5.checkbox ~onchange:set_show_formulas ()];
         pcdata "Show formulas.";
       ];
-      span ~a:[a_class ["error"]] [Html5.C.node {{Html5.R.pcdata error}}];
+      span ~a:[a_class ["error"]] [Html5.C.node [%client Html5.R.pcdata error]];
     ];
     table ~a:[a_class ["sheet"]]
       (tr (td [] :: List.sample mkhdr m) :: List.sample mkrow n)
