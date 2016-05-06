@@ -7,7 +7,7 @@ License: GPL-3
 AlphaFeatures: ocamlbuild_more_args, pure_interface
 Plugins: DevFiles (0.4), META (0.4)
 BuildTools: ocamlbuild
-XOCamlbuildPluginTags: package(eliom.ocamlbuild)
+XOCamlbuildPluginTags: package(ocamlbuild-eliom-dev)
 OCamlVersion: >= 4.01
 
 Library "spreadsheet-demo"
