@@ -1,4 +1,6 @@
-<*.eliom*>: eliom_ppx
+true: bin_annot, eliom_ppx
 <**/*.{ml,mli}>: package(lwt.ppx), package(js_of_ocaml.deriving.ppx)
-<server/*.{ml,mli}>: thread
 <client/*.{ml,mli}>: package(js_of_ocaml.ppx)
+<server/*>: thread
+<server/*>: package(eliom.server), package(prime)
+<client/*>: package(eliom.client), package(prime)

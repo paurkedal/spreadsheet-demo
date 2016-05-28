@@ -134,14 +134,14 @@ let main_handler () () =
   Lwt.return @@
     Eliom_tools.D.html
       ~title:"Spreadsheet Demo"
-      ~css:[["css"; "spreadsheet-demo.css"]]
+      ~css:[["spreadsheet-demo.css"]]
       (body [
         h1 [pcdata "Spreadsheet Demo"];
         render_sheet csheet;
       ])
 
 module Main_app =
-  Eliom_registration.App (struct let application_name = "main" end)
+  Eliom_registration.App (struct let application_name = "spreadsheet_demo" end)
 let main_service =
   Main_app.register_service ~path:[] ~get_params:Eliom_parameter.unit
                             main_handler

@@ -1,0 +1,16 @@
+opam-version: "1.2"
+name: "spreadsheet-demo"
+version: "dev"
+authors: ["Petter A. Urkedal"]
+maintainer: "paurkedal@gmail.com"
+homepage: "https://github.com/paurkedal/spreadsheet-demo/"
+bug-reports: "https://github.com/paurkedal/spreadsheet-demo/issues"
+dev-repo: "https://github.com/paurkedal/spreadsheet-demo.git"
+license: "GPL-3"
+build: [ocaml "pkg/build.ml"]
+depends: [
+  "eliom"
+  "topkg" {build}
+  "ocamlbuild" {build}
+  "prime"
+]

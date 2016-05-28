@@ -1,0 +1,7 @@
+description = "Web spreadsheet demo application"
+version = "%%VERSION_NUM%%"
+requires = "eliom prime"
+archive(byte) = "spreadsheet-demo.cma"
+archive(native) = "spreadsheet-demo.cmxa"
+plugin(byte) = "spreadsheet-demo.cma"
+plugin(native) = "spreadsheet-demo.cmxs"
