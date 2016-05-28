@@ -15,7 +15,7 @@
  *)
 
 [%%shared
-  open Eliom_content
+  open Eliom_content.Html5
   open Eliom_pervasives
   open Unprime
   open Unprime_list
@@ -76,36 +76,37 @@ let render_sheet csheet =
   let mkcell j k =
     let open Csheet in
     let {expr; set_expr; value} = csheet.(j).(k) in
-    Html5.C.node [%client
+    C.node [%client
       let set_expr s =
         try%lwt ~%set_expr s >|= fun () -> set_error "";
         with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
       let value = React.S.l1 fst ~%value in
       let pick showf pos v e = if showf || pos = (~%j, ~%k) then e else v in
-      Html5.F.td
-        ~a:[Html5.F.a_onclick (fun _ -> set_edit_pos (~%j, ~%k));
-            Html5.R.a_class (React.S.l1 snd ~%value)]
-        [Rform5.string_input ~a:[Html5.F.a_size 12] ~onchange:set_expr
+      F.td
+        ~a:[F.a_onclick (fun _ -> set_edit_pos (~%j, ~%k));
+            R.a_class (React.S.l1 snd ~%value)]
+        [Rform5.string_input ~a:[F.a_size 12] ~onchange:set_expr
                           (React.S.l4 pick show_formulas edit_pos value ~%expr)]
     ] in
 
   let mkrow j =
-    Html5.F.(tr (th [pcdata (string_of_int j)] :: List.sample (mkcell j) m)) in
+    let tds = List.sample (mkcell j) m in
+    F.tr (F.th [F.pcdata (string_of_int j)] :: tds) in
 
   let mkhdr k =
-    Html5.F.(th [pcdata (String.make 1 (Formula.letter_of_int k))]) in
+    F.th [F.pcdata (String.make 1 (Formula.letter_of_int k))] in
 
-  Html5.F.(div [
-    div [
-      span ~a:[a_class ["global"]] [
-        Html5.C.node [%client Rform5.checkbox ~onchange:set_show_formulas ()];
-        pcdata "Show formulas.";
+  F.div [
+    F.div [
+      F.span ~a:[F.a_class ["global"]] [
+        C.node [%client Rform5.checkbox ~onchange:set_show_formulas ()];
+        F.pcdata "Show formulas.";
       ];
-      span ~a:[a_class ["error"]] [Html5.C.node [%client Html5.R.pcdata error]];
+      F.span ~a:[F.a_class ["error"]] [C.node [%client R.pcdata error]];
     ];
-    table ~a:[a_class ["sheet"]]
-      (tr (td [] :: List.sample mkhdr m) :: List.sample mkrow n)
-  ])
+    F.table ~a:[F.a_class ["sheet"]]
+      (F.tr (F.td [] :: List.sample mkhdr m) :: List.sample mkrow n)
+  ]
 
 let () = Ocsigen_config.set_maxrequestbodysizeinmemory 65536
 
@@ -130,13 +131,12 @@ let () =
 let csheet = Csheet.of_sheet sheet
 
 let main_handler () () =
-  let open Html5.D in
   Lwt.return @@
     Eliom_tools.D.html
       ~title:"Spreadsheet Demo"
       ~css:[["spreadsheet-demo.css"]]
-      (body [
-        h1 [pcdata "Spreadsheet Demo"];
+      (F.body [
+        F.h1 [F.pcdata "Spreadsheet Demo"];
         render_sheet csheet;
       ])
 
