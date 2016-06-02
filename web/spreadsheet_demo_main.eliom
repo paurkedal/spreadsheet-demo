@@ -76,7 +76,7 @@ let render_sheet csheet =
   let mkcell j k =
     let open Csheet in
     let {expr; set_expr; value} = csheet.(j).(k) in
-    C.node [%client
+    C.node ~init:(D.td []) [%client
       let set_expr s =
         try%lwt ~%set_expr s >|= fun () -> set_error "";
         with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
