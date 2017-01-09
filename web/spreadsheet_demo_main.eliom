@@ -1,4 +1,4 @@
-(* Copyright (C) 2014--2016  Petter A. Urkedal <paurkedal@gmail.com>
+(* Copyright (C) 2014--2017  Petter A. Urkedal <paurkedal@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
  *)
 
 [%%shared
-  open Eliom_content.Html5
-  open Eliom_pervasives
+  open Eliom_content.Html
+  open Eliom_client
   open Unprime
   open Unprime_list
   open Unprime_option
@@ -36,7 +36,7 @@ module Csheet = struct
 
   type cell = {
     expr : string Eliom_react.S.Down.t;
-    set_expr : (string, unit) server_function;
+    set_expr : (string, (unit, string) result) server_function;
     value : (string * string list) Eliom_react.S.Down.t;
   }
 
@@ -53,8 +53,14 @@ module Csheet = struct
           Eliom_react.S.Down.of_react ~scope:`Site
             (React.S.l1 Formula.string_of_expr cell.Spreadsheet.cell_expr) in
         let set_expr = server_function [%derive.json: string] @@ fun s ->
-          let e = Formula_lexer.parse_string s in
-          Lwt.return (Spreadsheet.set sheet j k e) in
+          Lwt.return begin
+            try
+              let e = Formula_lexer.parse_string s in
+              Spreadsheet.set sheet j k e; Ok ()
+            with
+             | Parsing.Parse_error -> Error "Invalid expression."
+             | Failure msg -> Error msg
+          end in
         let value_info v = (Formula.string_of_value v, value_class v) in
         let value =
           Eliom_react.S.Down.of_react ~scope:`Site
@@ -78,14 +84,16 @@ let render_sheet csheet =
     let {expr; set_expr; value} = csheet.(j).(k) in
     C.node ~init:(D.td []) [%client
       let set_expr s =
-        try%lwt ~%set_expr s >|= fun () -> set_error "";
-        with Eliom_lib.Exception_on_server s -> set_error s; Lwt.return_unit in
+        ~%set_expr s >|=
+        (function
+         | Ok () -> set_error ""
+         | Error msg -> set_error msg) in
       let value = React.S.l1 fst ~%value in
       let pick showf pos v e = if showf || pos = (~%j, ~%k) then e else v in
       F.td
         ~a:[F.a_onclick (fun _ -> set_edit_pos (~%j, ~%k));
             R.a_class (React.S.l1 snd ~%value)]
-        [Rform5.string_input ~a:[F.a_size 12] ~onchange:set_expr
+        [Rform.string_input ~a:[F.a_size 12] ~onchange:set_expr
                           (React.S.l4 pick show_formulas edit_pos value ~%expr)]
     ] in
 
@@ -99,7 +107,7 @@ let render_sheet csheet =
   F.div [
     F.div [
       F.span ~a:[F.a_class ["global"]] [
-        C.node [%client Rform5.checkbox ~onchange:set_show_formulas ()];
+        C.node [%client Rform.checkbox ~onchange:set_show_formulas ()];
         F.pcdata "Show formulas.";
       ];
       F.span ~a:[F.a_class ["error"]] [C.node [%client R.pcdata error]];
@@ -121,7 +129,7 @@ let () =
   set sheet 3 1 (Const (Float 0.25));
   let range = Range ((0, 1), (3, 1)) in
   let comp j fn =
-    set sheet j 0 (Const (Text (String.capitalize fn ^ ":")));
+    set sheet j 0 (Const (Text (String.capitalize_ascii fn ^ ":")));
     set sheet j 1 (Call (fn, range)) in
   comp 4 "sum";
   comp 5 "prod";
@@ -140,8 +148,14 @@ let main_handler () () =
         render_sheet csheet;
       ])
 
-module Main_app =
-  Eliom_registration.App (struct let application_name = "spreadsheet_demo" end)
+module Main_app = Eliom_registration.App
+  (struct
+    let application_name = "spreadsheet_demo"
+    let global_data_path = None
+  end)
+
 let main_service =
-  Main_app.register_service ~path:[] ~get_params:Eliom_parameter.unit
-                            main_handler
+  let gp = Eliom_parameter.unit in
+  Eliom_service.(create ~path:(Path []) ~meth:(Get gp) ())
+
+let () = Main_app.register main_service main_handler

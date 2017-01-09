@@ -1,4 +1,4 @@
-(* Copyright (C) 2014--2016  Petter A. Urkedal <paurkedal@gmail.com>
+(* Copyright (C) 2014--2017  Petter A. Urkedal <paurkedal@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
 
-open Eliom_content.Html5
+open Eliom_content.Html
 
 let custom_input ?(a = []) ~of_string ~to_string
                  ?(onchange : ('a -> unit Lwt.t) option) v =
   let myattr =
     match onchange with
-    | None -> D.a_readonly `ReadOnly
+    | None -> D.a_readonly ()
     | Some f ->
       let g ev =
         let elt = (Js.Unsafe.coerce (Dom.eventTarget ev)
