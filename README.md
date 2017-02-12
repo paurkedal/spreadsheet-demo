@@ -15,8 +15,11 @@ reactive programming in Eliom client-server applications.
 
 ## Usage
 
-After checking out the repository and building according to standard oasis
-practises, you run it on http://localhost:8080/ with
+After checking out the repository, build with
+
+    ocaml pkg/pkg.ml build
+
+and run on http://localhost:8080/ with
 
     mkdir -p _var/{lib,log,run}
     ocsigenserver -c ocsigen-dev.conf
